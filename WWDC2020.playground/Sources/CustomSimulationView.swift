@@ -4,6 +4,8 @@ struct CustomSimulationView: View {
     
     var frame: CGRect
     
+    @EnvironmentObject var animation: AnimationViewController
+
     @Binding var showingSheet: Bool
     
     @State private var population: Int = 5
@@ -42,7 +44,7 @@ struct CustomSimulationView: View {
                                 .foregroundColor(StyleSheet.textColor)
                                 .frame(width: self.frame.size.width*0.4-20, height: 20, alignment: .leading)
                         Spacer()
-                            Text("\(self.population)")
+                        Text("\(self.animation.healthyEmojis)")
                                 .font(.system(.body)).bold()
                                 .foregroundColor(StyleSheet.secondaryTextColor)
                                 .frame(width: self.frame.size.width*0.2-20, height: 20, alignment: .center)
@@ -107,13 +109,6 @@ struct CustomSimulationView: View {
                             .frame(width: self.frame.size.width*0.4-20, height: 20, alignment: .trailing)
                     }.padding()
                 }
-                
-                    
-
-                        
-                        
-                        
-
             }
     }
 }

@@ -28,7 +28,8 @@ struct DashboardUIView: View {
                     }
                     if self.showingSheet {
                         CustomSimulationView(showingSheet: self.$showingSheet, frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 280))
-                             .frame(width: (geometry.size.width/2)-30, height: 280)
+                            .environmentObject(self.animation)
+                            .frame(width: (geometry.size.width/2)-30, height: 280)
                      }
                 }
 
@@ -36,6 +37,13 @@ struct DashboardUIView: View {
                 // Second Column
                 VStack(alignment: .leading){
                 
+                    // Start/Pause btn
+                    
+                    Button(action: {
+                        self.animation.gameIsPaused.toggle()
+                    }){
+                        Text("Pauza/Start")
+                    }
                     
                 // StatsView
                 StatsView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 80))

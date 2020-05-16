@@ -11,6 +11,9 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     @Published var recoveredEmojis = 0
     @Published var deadEmojis = 0
     
+    // Custom Simulation
+    @Published var numberOfEmojis = 0
+    
     // LineGraphView data
     // Healthy
     @Published var rawDataHealthy : [CGFloat] = []
@@ -25,16 +28,21 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     @Published var rawDataDead : [CGFloat] = []
     @Published var normalizedDataDead : [CGFloat] = []
     //
+    var startTime = 0
     
     @Published var sir: [Sums] = []
-            
-    @Published var data : [CGFloat] = []
-    
+                
     @Published var gameIsPaused = false {
         didSet {
             isPaused = gameIsPaused
+            pause()
         }
     }
+    
+    
+    var timerTable : [Timer] = []
+
+
         
     override public func didMove(to view: SKView) {
         // View size
@@ -157,6 +165,7 @@ extension AnimationViewController {
              
              sprite.blendMode = .replace
              sprite.userData = [
+                "keyIncubationTimeLeft" : virusIncubationTime,
                  "keyInfectedDate" : 0,
                  "keyHealedDate" : 0,
                  "keyDeathDate" : 0,
@@ -211,6 +220,7 @@ extension AnimationViewController {
         let total = sSum + iSum + rSum
         let dead = kPopulationSize - total
         
+        numberOfEmojis = total
         healthyEmojis = sSum
         infectedEmojis = iSum
         recoveredEmojis = rSum
@@ -234,27 +244,51 @@ extension AnimationViewController {
         node.text = String("🤢")
         node.userData?.setValue(gIteration, forKey: "keyInfectedDate")
         
-        let _ = Timer.scheduledTimer(withTimeInterval: virusIncubationTime, repeats: false) {
-            timer in
+        let virusTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true){ timer in
             
-            // probability of spreading the virus
-            let probability = randomRange(min: 0, max: 100)
+            var time = node.userData?.value(forKey: "keyIncubationTimeLeft") as! Int
             
-            if probability < 60 {
-                node.userData?.setValue(gIteration, forKey: "keyDeathDate")
-                node.physicsBody?.categoryBitMask = PhysicsCategory.None
-                node.physicsBody?.contactTestBitMask = PhysicsCategory.None
-                node.physicsBody?.collisionBitMask = PhysicsCategory.None
-                self.popSummary()
-                node.text = String("☠️")
-                // Stuck him in place
-                node.physicsBody?.velocity = CGVector()
-            } else {
-                // Healed patient
-                node.userData?.setValue(gIteration, forKey: "keyHealedDate")
-                node.physicsBody?.categoryBitMask = PhysicsCategory.Rec
-                node.text = String("🤩")
-                self.popSummary()
+            if (time > 0 ) {
+                time = time - 1
+                node.userData?.setValue(time, forKey: "keyIncubationTimeLeft")
+            }else{
+                let probability = randomRange(min: 0, max: 100)
+
+                if probability < 60 {
+                    node.userData?.setValue(-1, forKey: "keyIncubationTimeLeft")
+                    node.userData?.setValue(gIteration, forKey: "keyDeathDate")
+                    node.physicsBody?.categoryBitMask = PhysicsCategory.None
+                    node.physicsBody?.contactTestBitMask = PhysicsCategory.None
+                    node.physicsBody?.collisionBitMask = PhysicsCategory.None
+                    self.popSummary()
+                    node.text = String("☠️")
+                    // Stuck him in place
+                    node.physicsBody?.velocity = CGVector()
+                } else {
+                    // Healed patient
+                    node.userData?.setValue(gIteration, forKey: "keyHealedDate")
+                    node.physicsBody?.categoryBitMask = PhysicsCategory.Rec
+                    node.text = String("🤩")
+                    self.popSummary()
+                }
+                timer.invalidate()
+            }
+        }
+        timerTable.append(virusTimer)
+    }
+    
+    func pause(){
+        if gameIsPaused {
+            for timer in timerTable {
+                timer.invalidate()
+            }
+            timerTable.removeAll()
+        }else{
+            for node in sprites {
+                var time = node.userData?.value(forKey: "keyIncubationTimeLeft") as! Int
+                if (time > -1 && node.physicsBody?.categoryBitMask == PhysicsCategory.Inf){
+                    healOrDie(node: node)
+                }
             }
         }
     }
@@ -274,3 +308,4 @@ extension AnimationViewController {
         }
     }
 }
+
