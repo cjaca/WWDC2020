@@ -5,23 +5,45 @@ import SwiftUI
 
 public class AnimationViewController: SKScene, SKPhysicsContactDelegate, ObservableObject {
     
+    // StatsView data
+    @Published var healthyEmojis = 0
+    @Published var infectedEmojis = 0
+    @Published var recoveredEmojis = 0
     @Published var deadEmojis = 0
+    
+    // LineGraphView data
+    // Healthy
+    @Published var rawDataHealthy : [CGFloat] = []
+    @Published var normalizedDataHealthy : [CGFloat] = []
+    // Infected
+    @Published var rawDataInfected : [CGFloat] = []
+    @Published var normalizedDataInfected : [CGFloat] = []
+    // Recovered
+    @Published var rawDataRecovered : [CGFloat] = []
+    @Published var normalizedDataRecovered : [CGFloat] = []
+    // Dead
+    @Published var rawDataDead : [CGFloat] = []
+    @Published var normalizedDataDead : [CGFloat] = []
+    //
+    
+    @Published var sir: [Sums] = []
+            
+    @Published var data : [CGFloat] = []
     
     @Published var gameIsPaused = false {
         didSet {
             isPaused = gameIsPaused
         }
     }
-    
+        
     override public func didMove(to view: SKView) {
         // View size
         super.size = CGSize(width: 760, height: 960)
         super.anchorPoint = CGPoint(x:0, y: 0)
-        super.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.00)
+        super.backgroundColor = .black
         super.physicsWorld.contactDelegate = self
         super.physicsWorld.gravity = CGVector(dx: 0, dy: 0)
         view.allowsTransparency = true
-    
         
         // Creating bounds
         let rect = CGRect(x: 25, y: 505, width: 710, height: 430)
@@ -81,6 +103,7 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
         if animationIsRunning {
             gIteration += 1
             applyForceToSprite()
+            popSummary()
         }
     }
 }
@@ -104,6 +127,7 @@ extension AnimationViewController {
             // Center of sprite
              sprite.verticalAlignmentMode = .center
              sprite.horizontalAlignmentMode = .center
+             sprite.fontSize = 20
              
             // Setting spawn
              let x = randomRange(min: 25, max: 735)
@@ -125,8 +149,8 @@ extension AnimationViewController {
              sprite.physicsBody?.usesPreciseCollisionDetection = true
              
             // Apply start velocity
-             let actualX = randomRange(min: -100, max: 100)
-             let actualY = randomRange(min: -100, max: 100)
+             let actualX = randomRange(min: -gForce, max: gForce)
+             let actualY = randomRange(min: -gForce, max: gForce)
              sprite.physicsBody?.velocity = CGVector(dx: actualX, dy: actualY)
              sprite.physicsBody?.friction = 0
              sprite.physicsBody?.restitution = 1
@@ -167,6 +191,9 @@ extension AnimationViewController {
     // Makes summary of emojis
     func popSummary() {
         
+            // s - Suspected
+            // i - Infected
+            // r - Recovered
         var sSum = 0, iSum = 0, rSum = 0
         
         for sprite in sprites {
@@ -183,7 +210,20 @@ extension AnimationViewController {
         
         let total = sSum + iSum + rSum
         let dead = kPopulationSize - total
+        
+        healthyEmojis = sSum
+        infectedEmojis = iSum
+        recoveredEmojis = rSum
         deadEmojis = dead
+        
+        (rawDataHealthy, normalizedDataHealthy) = normalization(rawData: rawDataHealthy, normalizedData: normalizedDataHealthy, newValue: CGFloat(sSum))
+        
+        (rawDataInfected, normalizedDataInfected) = normalization(rawData: rawDataInfected, normalizedData: normalizedDataInfected, newValue: CGFloat(iSum))
+        
+        (rawDataRecovered, normalizedDataRecovered) = normalization(rawData: rawDataRecovered, normalizedData: normalizedDataRecovered, newValue: CGFloat(rSum))
+        
+        (rawDataDead, normalizedDataDead) = normalization(rawData: rawDataDead, normalizedData: normalizedDataDead, newValue: CGFloat(dead))
+        
         let sumElement = Sums(x: gIteration, s: sSum, i: iSum, r: rSum, d: dead)
         sir.append(sumElement)
     }
@@ -200,7 +240,7 @@ extension AnimationViewController {
             // probability of spreading the virus
             let probability = randomRange(min: 0, max: 100)
             
-            if probability < 10 {
+            if probability < 60 {
                 node.userData?.setValue(gIteration, forKey: "keyDeathDate")
                 node.physicsBody?.categoryBitMask = PhysicsCategory.None
                 node.physicsBody?.contactTestBitMask = PhysicsCategory.None

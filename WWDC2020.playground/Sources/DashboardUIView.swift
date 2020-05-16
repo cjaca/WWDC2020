@@ -1,36 +1,70 @@
 import SwiftUI
 
 struct DashboardUIView: View {
-
     @ObservedObject var animation: AnimationViewController
+    @EnvironmentObject var dane: dataContainer
+    
+    @State private var showingSheet = false
     
     var body: some View {
-        ZStack{
-            if animation.gameIsPaused {
-                Color.red.opacity(0.5)
-                VStack {
-                    VStack{
-                        Text("Paused")
-                        Button("Continue") {
-                            self.animation.gameIsPaused = false
-                        }
-                    }.font(.largeTitle)
-                    .padding()
-                        .background(Color.green.opacity(0.5))
-                    .clipShape(RoundedRectangle(cornerRadius: CGFloat(10)))
-                }.transition(.slide)
-            }else{
-                VStack {
-                    HStack{
-                        Spacer()
-                        Button(action: {self.animation.gameIsPaused = true}){
-                            Text("⏸").font(.largeTitle).padding()
+        GeometryReader { geometry in
+            
+            HStack(){
+                
+                // First Column
+                ZStack{
+                    VStack(alignment: .leading){
+                        
+                        // Mode buttons
+                        RegulationView()
+                        .frame(width: (geometry.size.width/2)-30, height: 280)
+                        
+
+                        Button(action: {
+                            self.showingSheet.toggle()
+                        }){
+                            Text("Custom simulation")
                         }
                     }
-                    Text("Dead emojis: \(animation.deadEmojis)").font(.largeTitle)
-                    Spacer()
-                }.transition(.slide)
+                    if self.showingSheet {
+                        CustomSimulationView(showingSheet: self.$showingSheet, frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 280))
+                             .frame(width: (geometry.size.width/2)-30, height: 280)
+                     }
+                }
+
+                
+                // Second Column
+                VStack(alignment: .leading){
+                
+                    
+                // StatsView
+                StatsView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 80))
+                    .frame(width: (geometry.size.width/2)-30, height: 80)
+                    .environmentObject(self.animation)
+                    
+                    ZStack{
+//                        // Healthy Line Graph
+//                        InvertedBarGraphView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 150), data: self.animation.normalizedDataHealthy, color: .green)
+//                                .frame(width: (geometry.size.width/2)-30, height: 150)
+                        
+                        // Infected Line Graph
+                        BarGraphView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 150), data: self.animation.normalizedDataInfected, text: "Infected: " , emoji: "🤢",  numberOfEmojis: self.animation.infectedEmojis)
+                            .frame(width: (geometry.size.width/2)-30, height: 150)
+//                            
+//                            // Recovered Line Graph
+//                            InvertedBarGraphView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 150), data: self.animation.normalizedDataRecovered)
+//                                .frame(width: (geometry.size.width/2)-30, height: 150)
+                            
+//                            // Dead Line Graph
+//                        InvertedBarGraphView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 150), data: self.animation.normalizedDataDead, color: .blue)
+//                                .frame(width: (geometry.size.width/2)-30, height: 150)
+                    }
+                    
+
+
+                }
             }
+            .offset(y:145)
         }
     }
 }

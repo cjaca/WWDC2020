@@ -1,18 +1,30 @@
 import SpriteKit
+import SwiftUI
 
 let kPopulationSize: Int = 30
 
 var sprites:[SKLabelNode] = []
 
-var gForce: CGFloat = 50
+var gForce: CGFloat = 10
 
 var gIteration = 0
-
-var sir: [Sums] = []
 
 var virusIncubationTime : Double = 14.0
 
 var animationIsRunning = true
+
+public class dataContainer: ObservableObject {
+    @Published var licznik = 1337
+}
+
+struct StyleSheet {
+        static let backgroundColor: Color = Color(hex: 0x22222c)
+        static let textColor: Color = Color(hex: 0x727784)
+        static let secondaryTextColor: Color = Color(hex: 0xcfd0d4)
+        static let tintColor: Color = Color(hex: 0x6a7586)
+        static let barColor: Color = Color(hex: 0x1c1c24)
+}
+
 
 struct AnimationSize {
     static let width : CGFloat = 480
@@ -42,4 +54,71 @@ func random() -> CGFloat {
 
 func randomRange(min: CGFloat, max: CGFloat) -> CGFloat {
     return random() * (max - min) + min
+}
+
+extension Color {
+  init(hex: Int, alpha: Double = 1) {
+      let components = (
+          R: Double((hex >> 16) & 0xff) / 255,
+          G: Double((hex >> 08) & 0xff) / 255,
+          B: Double((hex >> 00) & 0xff) / 255
+      )
+      self.init(
+          .sRGB,
+          red: components.R,
+          green: components.G,
+          blue: components.B,
+          opacity: alpha
+      )
+    }
+}
+
+extension CGPath {
+
+    var points: Array<CGPoint> {
+
+        var arrPoints: Array<CGPoint> = []
+
+        /// applyWithBlock lets us examine each element of the CGPath, and decide what to do
+         
+        self.applyWithBlock { element in
+
+            switch element.pointee.type {
+            
+            case .moveToPoint, .addLineToPoint:
+                arrPoints.append(element.pointee.points.pointee)
+
+            case .addQuadCurveToPoint:
+              
+                arrPoints.append(element.pointee.points.pointee)
+                arrPoints.append(element.pointee.points.advanced(by: 1).pointee)
+
+            case .addCurveToPoint:
+                
+                arrPoints.append(element.pointee.points.pointee)
+                arrPoints.append(element.pointee.points.advanced(by: 1).pointee)
+                arrPoints.append(element.pointee.points.advanced(by: 2).pointee)
+
+            default:
+                break
+            }
+         }
+            
+        return arrPoints
+    }
+}
+
+extension Color {
+    static let darkStart = Color(red: 50 / 255, green: 60 / 255, blue: 65 / 255)
+    static let darkEnd = Color(red: 25 / 255, green: 25 / 255, blue: 30 / 255)
+   
+    static let lightStart = Color(red: 240/255, green: 240/255, blue: 246/255)
+    static let lightEnd = Color(red: 120/255, green: 120/255, blue: 123/255)
+    
+}
+
+extension LinearGradient {
+    init(_ colors: Color...) {
+        self.init(gradient: Gradient(colors: colors), startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
 }
