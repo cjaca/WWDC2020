@@ -14,6 +14,15 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     // Custom Simulation
     @Published var numberOfEmojis = 0
     
+    // Initial Infected
+    @Published var initialInfected = 10
+    
+    // Infectivity rate
+    @Published var infectivity = 50
+    
+    // Death rate
+    @Published var deathRate = 5
+    
     // LineGraphView data
     // Healthy
     @Published var rawDataHealthy : [CGFloat] = []
@@ -28,7 +37,8 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     @Published var rawDataDead : [CGFloat] = []
     @Published var normalizedDataDead : [CGFloat] = []
     //
-    var startTime = 0
+    var timerTable : [Timer] = []
+
     
     @Published var sir: [Sums] = []
                 
@@ -40,7 +50,6 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     }
     
     
-    var timerTable : [Timer] = []
 
 
         
@@ -80,28 +89,32 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
         
         // If A(sus) collide with B(Infected) - B++ hasInfected, A goes to healOrDie
         if contact.bodyA.categoryBitMask == PhysicsCategory.Sus && contact.bodyB.categoryBitMask == PhysicsCategory.Inf{
-            popSummary()
-            let infectiousNode = contact.bodyB.node as! SKLabelNode
-            var hasInfected = infectiousNode.userData?.value(forKey: "keyHasInfected") as! Int
-            hasInfected += 1
-            infectiousNode.userData?.setValue(hasInfected, forKey: "keyHasInfected")
-            
-            let node = contact.bodyA.node as! SKLabelNode
-            healOrDie(node: node)
+            let willBeInfected = randomRange(min: 0, max: 100)
+            if Int(willBeInfected) < infectivity {
+                popSummary()
+                let infectiousNode = contact.bodyB.node as! SKLabelNode
+                var hasInfected = infectiousNode.userData?.value(forKey: "keyHasInfected") as! Int
+                hasInfected += 1
+                infectiousNode.userData?.setValue(hasInfected, forKey: "keyHasInfected")
+                
+                let node = contact.bodyA.node as! SKLabelNode
+                healOrDie(node: node)
+            }
         }
         
         // If B collide with A
         if contact.bodyB.categoryBitMask == PhysicsCategory.Sus && contact.bodyA.categoryBitMask == PhysicsCategory.Inf {
-            popSummary()
-            let infectiousNode = contact.bodyA.node as! SKLabelNode
-            var hasInfected = infectiousNode.userData?.value(forKey: "keyHasInfected") as! Int
-            hasInfected += 1
-            infectiousNode.userData?.setValue(hasInfected, forKey: "keyHasInfected")
-            
-            let node = contact.bodyB.node as! SKLabelNode
-            node.physicsBody?.categoryBitMask = PhysicsCategory.Inf
-            node.text = String("😷")
-            healOrDie(node: node)
+            let willBeInfected = randomRange(min: 0, max: 100)
+            if Int(willBeInfected) < infectivity {
+                popSummary()
+                let infectiousNode = contact.bodyA.node as! SKLabelNode
+                var hasInfected = infectiousNode.userData?.value(forKey: "keyHasInfected") as! Int
+                hasInfected += 1
+                infectiousNode.userData?.setValue(hasInfected, forKey: "keyHasInfected")
+                
+                let node = contact.bodyB.node as! SKLabelNode
+                healOrDie(node: node)
+            }
         }
     }
     
@@ -185,7 +198,7 @@ extension AnimationViewController {
          let actualY = randomRange(min: -gForce, max: gForce)
          
          // Pick random sprite
-         let max = CGFloat(kPopulationSize-1)
+         let max = CGFloat(sprites.count-1)
          let i = Int(randomRange(min: 0, max: max).rounded())
          let s = sprites[i]
          
@@ -220,7 +233,7 @@ extension AnimationViewController {
         let total = sSum + iSum + rSum
         let dead = kPopulationSize - total
         
-        numberOfEmojis = total
+        numberOfEmojis = total 
         healthyEmojis = sSum
         infectedEmojis = iSum
         recoveredEmojis = rSum
@@ -240,41 +253,44 @@ extension AnimationViewController {
 
     func healOrDie(node: SKLabelNode) {
         // sets node to infected state
-        node.physicsBody?.categoryBitMask = PhysicsCategory.Inf
-        node.text = String("🤢")
-        node.userData?.setValue(gIteration, forKey: "keyInfectedDate")
-        
-        let virusTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true){ timer in
+            node.physicsBody?.categoryBitMask = PhysicsCategory.Inf
+            node.text = String("🤢")
+            node.userData?.setValue(gIteration, forKey: "keyInfectedDate")
             
-            var time = node.userData?.value(forKey: "keyIncubationTimeLeft") as! Int
-            
-            if (time > 0 ) {
-                time = time - 1
-                node.userData?.setValue(time, forKey: "keyIncubationTimeLeft")
-            }else{
-                let probability = randomRange(min: 0, max: 100)
+            let virusTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true){ timer in
+                
+                var time = node.userData?.value(forKey: "keyIncubationTimeLeft") as! Int
+                
+                if (time > 0 ) {
+                    time = time - 1
+                    node.userData?.setValue(time, forKey: "keyIncubationTimeLeft")
+                }else{
+                    let probability = randomRange(min: 0, max: 100)
 
-                if probability < 60 {
-                    node.userData?.setValue(-1, forKey: "keyIncubationTimeLeft")
-                    node.userData?.setValue(gIteration, forKey: "keyDeathDate")
-                    node.physicsBody?.categoryBitMask = PhysicsCategory.None
-                    node.physicsBody?.contactTestBitMask = PhysicsCategory.None
-                    node.physicsBody?.collisionBitMask = PhysicsCategory.None
-                    self.popSummary()
-                    node.text = String("☠️")
-                    // Stuck him in place
-                    node.physicsBody?.velocity = CGVector()
-                } else {
-                    // Healed patient
-                    node.userData?.setValue(gIteration, forKey: "keyHealedDate")
-                    node.physicsBody?.categoryBitMask = PhysicsCategory.Rec
-                    node.text = String("🤩")
-                    self.popSummary()
+                    if Int(probability) <= self.deathRate {
+                        node.userData?.setValue(-1, forKey: "keyIncubationTimeLeft")
+                        node.userData?.setValue(gIteration, forKey: "keyDeathDate")
+                        node.physicsBody?.categoryBitMask = PhysicsCategory.None
+                        node.physicsBody?.contactTestBitMask = PhysicsCategory.None
+                        node.physicsBody?.collisionBitMask = PhysicsCategory.None
+                        self.popSummary()
+                        node.text = String("☠️")
+                        // Stuck him in place
+                        node.physicsBody?.velocity = CGVector()
+                        
+                        let fadeOutAction = SKAction.fadeOut(withDuration: 4.5)
+                        node.run(fadeOutAction)
+                    } else {
+                        // Healed patient
+                        node.userData?.setValue(gIteration, forKey: "keyHealedDate")
+                        node.physicsBody?.categoryBitMask = PhysicsCategory.Rec
+                        node.text = String("🤩")
+                        self.popSummary()
+                    }
+                    timer.invalidate()
                 }
-                timer.invalidate()
             }
-        }
-        timerTable.append(virusTimer)
+            timerTable.append(virusTimer)
     }
     
     func pause(){
@@ -294,18 +310,77 @@ extension AnimationViewController {
     }
 
     func startInfection() {
+        let max = CGFloat(kPopulationSize-1)
+        let i = sprites.count-1
         // start infection
-        let _ = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { timer in
-            let max = CGFloat(kPopulationSize-1)
-            let i = Int(randomRange(min:0, max: max).rounded())
-            
-            for sprite in sprites {
-                if sprite.name == String(i) {
-                    let node = sprites[i]
-                    self.healOrDie(node: node)
+        for n in 1...initialInfected {
+            let _ = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { timer in
+                for sprite in sprites {
+                    if sprite.name == String(i-n) {
+                        let node = sprites[i-n]
+                        self.healOrDie(node: node)
+                    }
                 }
             }
         }
+    }
+    
+    func addSprite(){
+        // Set emoji
+                   let sprite = SKLabelNode(text: String("😊"))
+                  // Set name based on next number
+                  sprite.name = String(sprites.count)
+                  // Center of sprite
+                   sprite.verticalAlignmentMode = .center
+                   sprite.horizontalAlignmentMode = .center
+                   sprite.fontSize = 20
+                   
+                  // Setting spawn
+                   let x = randomRange(min: 25, max: 735)
+                   let y = randomRange(min: 505, max: 935)
+                   sprite.position = CGPoint(x: x, y: y)
+                   
+                  // Setting physics of emoji
+                   sprite.physicsBody = SKPhysicsBody(circleOfRadius: 10)
+                   sprite.physicsBody?.isDynamic = true
+                   sprite.physicsBody?.allowsRotation = true
+                   sprite.physicsBody?.affectedByGravity = false
+                   sprite.physicsBody?.mass = 0.01
+                   
+                  // Setting bit masks
+                   sprite.physicsBody!.categoryBitMask = PhysicsCategory.Sus
+                   sprite.physicsBody!.contactTestBitMask = PhysicsCategory.All
+                   sprite.physicsBody?.collisionBitMask = PhysicsCategory.All
+                   
+                   sprite.physicsBody?.usesPreciseCollisionDetection = true
+                   
+                  // Apply start velocity
+                   let actualX = randomRange(min: -gForce, max: gForce)
+                   let actualY = randomRange(min: -gForce, max: gForce)
+                   sprite.physicsBody?.velocity = CGVector(dx: actualX, dy: actualY)
+                   sprite.physicsBody?.friction = 0
+                   sprite.physicsBody?.restitution = 1
+                   
+                   sprite.blendMode = .replace
+                   sprite.userData = [
+                      "keyIncubationTimeLeft" : virusIncubationTime,
+                       "keyInfectedDate" : 0,
+                       "keyHealedDate" : 0,
+                       "keyDeathDate" : 0,
+                       "keyHasInfected" : 0
+                   ]
+        sprites.append(sprite)
+        addChild(sprite)
+        kPopulationSize+=1
+    }
+    
+    func deleteSprite(){
+        // Pick random sprite
+        let max = sprites.count-1
+        let s = sprites[max]
+        sprites[max].removeFromParent()
+        sprites.remove(at: max)
+        kPopulationSize-=1
     }
 }
 

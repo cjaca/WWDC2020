@@ -1,7 +1,7 @@
 import SpriteKit
 import SwiftUI
 
-let kPopulationSize: Int = 30
+var kPopulationSize: Int = 30
 
 var sprites:[SKLabelNode] = []
 
