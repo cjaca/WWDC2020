@@ -41,6 +41,7 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     // restart window toggle
     @Published var restartViewIsVisible = false
 
+    @Published var maximumInfected = 0
     
     @Published var sir: [Sums] = []
                 
@@ -50,6 +51,14 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
             pause()
         }
     }
+    
+    // Regulations
+    
+    @Published var noRegulations = true
+    @Published var moderateRegulations = false
+    @Published var strongRegulations = false
+    @Published var veryStrongRegulations = false
+    @Published var strongestRegulations = false
     
     
 
@@ -184,7 +193,8 @@ extension AnimationViewController {
                  "keyInfectedDate" : 0,
                  "keyHealedDate" : 0,
                  "keyDeathDate" : 0,
-                 "keyHasInfected" : 0
+                 "keyHasInfected" : 0,
+                 "keyHasQuarantine" : 0,
              ]
              
              sprites.append(sprite)
@@ -203,12 +213,18 @@ extension AnimationViewController {
          let max = CGFloat(sprites.count-1)
          let i = Int(randomRange(min: 0, max: max).rounded())
          let s = sprites[i]
-         
-         // ignore the dead
+                
+        // ignore the dead
          if s.physicsBody?.categoryBitMask == PhysicsCategory.None {return}
+        
+        let hasQuarantine = s.userData?.value(forKey: "keyHasQuarantine") as! Int
+        
+        if hasQuarantine != 1 {
+            // Apply force to alive
+             s.physicsBody?.applyForce(CGVector(dx: actualX, dy: actualY))
+        }
          
-        // Apply force to alive
-         s.physicsBody?.applyForce(CGVector(dx: actualX, dy: actualY))
+
      }
 
 
@@ -241,14 +257,8 @@ extension AnimationViewController {
         recoveredEmojis = rSum
         deadEmojis = dead
         
-        (rawDataHealthy, normalizedDataHealthy) = normalization(rawData: rawDataHealthy, normalizedData: normalizedDataHealthy, newValue: CGFloat(sSum))
-        
-        (rawDataInfected, normalizedDataInfected) = normalization(rawData: rawDataInfected, normalizedData: normalizedDataInfected, newValue: CGFloat(iSum))
-        
-        (rawDataRecovered, normalizedDataRecovered) = normalization(rawData: rawDataRecovered, normalizedData: normalizedDataRecovered, newValue: CGFloat(rSum))
-        
-        (rawDataDead, normalizedDataDead) = normalization(rawData: rawDataDead, normalizedData: normalizedDataDead, newValue: CGFloat(dead))
-        
+        (rawDataInfected, normalizedDataInfected,maximumInfected) = normalization(rawData: rawDataInfected, normalizedData: normalizedDataInfected, newValue: CGFloat(iSum))
+                
         let sumElement = Sums(x: gIteration, s: sSum, i: iSum, r: rSum, d: dead)
         sir.append(sumElement)
     }
@@ -258,6 +268,14 @@ extension AnimationViewController {
             node.physicsBody?.categoryBitMask = PhysicsCategory.Inf
             node.text = String("🤢")
             node.userData?.setValue(gIteration, forKey: "keyInfectedDate")
+
+        
+        if moderateRegulations {
+            node.userData?.setValue(1, forKey: "keyHasQuarantine")
+            var _ = Timer.scheduledTimer(withTimeInterval: 2, repeats: false){ timer in
+                node.physicsBody?.velocity = CGVector()
+            }
+        }
             
             let virusTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true){ timer in
                 
@@ -284,9 +302,13 @@ extension AnimationViewController {
                         node.run(fadeOutAction)
                     } else {
                         // Healed patient
+                        if self.moderateRegulations {
+                            node.userData?.setValue(0, forKey: "keyHasQuarantine")
+                        }
+                        
                         node.userData?.setValue(gIteration, forKey: "keyHealedDate")
                         node.physicsBody?.categoryBitMask = PhysicsCategory.Rec
-                        node.text = String("🤩")
+                        node.text = String("😷")
                         self.popSummary()
                     }
                     timer.invalidate()
@@ -368,8 +390,10 @@ extension AnimationViewController {
                        "keyInfectedDate" : 0,
                        "keyHealedDate" : 0,
                        "keyDeathDate" : 0,
-                       "keyHasInfected" : 0
+                       "keyHasInfected" : 0,
+                       "keyHasQuarantine" : 0,
                    ]
+        
         sprites.append(sprite)
         addChild(sprite)
         kPopulationSize+=1
@@ -391,10 +415,21 @@ extension AnimationViewController {
         }
         sprites.removeAll()
         
+        rawDataInfected.removeAll()
+        normalizedDataInfected.removeAll()
+        
         initSprites()
         popSummary()
         startInfection()
         gameIsPaused = false
+    }
+    
+    func moderate(){
+        for sprite in sprites {
+            if sprite.physicsBody?.categoryBitMask == PhysicsCategory.Inf {
+                
+            }
+        }
     }
 }
 

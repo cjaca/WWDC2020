@@ -41,18 +41,18 @@ struct CustomSimulationView: View {
                                 .padding(.horizontal, CGFloat(10))
                         }
                         Spacer()
-                        Text("Custom simulation")
+                        Text("Virus spreading simulator")
                             .font(.system(.body))
                             .foregroundColor(StyleSheet.secondaryTextColor)
                         Spacer()
-                        Button(action: {
-                            self.showingSheet.toggle()
-                        }){
-                            Image(systemName: "xmark.circle")
-                                .font(.system(.body))
-                                .foregroundColor(StyleSheet.secondaryTextColor)
-                                .padding(.horizontal, CGFloat(10))
-                        }
+//                        Button(action: {
+//                            self.showingSheet.toggle()
+//                        }){
+//                            Image(systemName: "xmark.circle")
+//                                .font(.system(.body))
+//                                .foregroundColor(StyleSheet.secondaryTextColor)
+//                                .padding(.horizontal, CGFloat(10))
+//                        }
                     }.padding(10)
                     
                     HStack{

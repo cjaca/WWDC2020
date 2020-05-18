@@ -12,6 +12,8 @@ struct BarGraphView: View {
     
     var numberOfEmojis = 0
     
+    var maximum : Int = 0
+    
     
     var body: some View {
         ZStack {
@@ -26,7 +28,14 @@ struct BarGraphView: View {
                     Text(emoji + " \(numberOfEmojis)")
                         .font(.system(.body)).bold()
                         .foregroundColor(StyleSheet.secondaryTextColor)
-                }
+                    Spacer()
+                    Text("Maximum: ")
+                    .font(.system(.caption))
+                    .foregroundColor(StyleSheet.textColor)
+                    Text("\(maximum)")
+                    .font(.system(.body)).bold()
+                    .foregroundColor(StyleSheet.secondaryTextColor)
+                }.padding(.horizontal)
                 
                 BarGraph(dataPoints: data)
                     .fill(Color.green)
@@ -59,12 +68,12 @@ struct BarGraph: Shape {
 
 struct BarGraphView_Previews: PreviewProvider {
     static var previews: some View {
-        BarGraphView(frame: CGRect(x: 0, y: 0, width: 350, height: 300), data: [], text: "", emoji: "😀", numberOfEmojis: 0)
+        BarGraphView(frame: CGRect(x: 0, y: 0, width: 350, height: 300), data: [], text: "", emoji: "😀", numberOfEmojis: 0,maximum: 0)
     }
 }
 
 
-public func normalization(rawData: [CGFloat], normalizedData: [CGFloat], newValue: CGFloat)->([CGFloat], [CGFloat]){
+public func normalization(rawData: [CGFloat], normalizedData: [CGFloat], newValue: CGFloat)->([CGFloat], [CGFloat], Int){
     // return rawData, normalizedData, min, max
     
     var spareArray: [CGFloat] = []
@@ -76,13 +85,13 @@ public func normalization(rawData: [CGFloat], normalizedData: [CGFloat], newValu
 
     
     var min : CGFloat
-    var max : CGFloat
+    var max : CGFloat = 0
     
     if rawData.count == 0 {
         rawData.append(newValue)
         normalizedData.append(1)
         
-        return (rawData, normalizedData)
+        return (rawData, normalizedData, Int(max))
         
     } else {
         oldMin = rawData.min()!
@@ -104,5 +113,5 @@ public func normalization(rawData: [CGFloat], normalizedData: [CGFloat], newValu
         
     normalizedData = spareArray
     
-    return (rawData, normalizedData)
+    return (rawData, normalizedData, Int(max))
 }

@@ -2,13 +2,11 @@ import SwiftUI
 
 struct DashboardUIView: View {
     @ObservedObject var animation: AnimationViewController
-    @EnvironmentObject var dane: dataContainer
     
     @State private var showingSheet = false
     
     var body: some View {
         GeometryReader { geometry in
-            
             VStack{
 
                 ZStack{
@@ -17,6 +15,7 @@ struct DashboardUIView: View {
                         .environmentObject(self.animation)
                         .transition(.asymmetric(insertion: .opacity, removal: .opacity))
                         .animation(.default)
+
                     }
                 }.frame(width: 550, height: 100)
 
@@ -29,16 +28,18 @@ struct DashboardUIView: View {
                             VStack(alignment: .leading){
                                 
                                 // Mode buttons
-                                RegulationView()
-                                .frame(width: (geometry.size.width/2)-30, height: 280)
+                                CustomSimulationView(showingSheet: self.$showingSheet, frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 280))
+                                    .environmentObject(self.animation)
+                                    .frame(width: (geometry.size.width/2)-30, height: 280)
+
 
                             }
                             if self.showingSheet {
-                                CustomSimulationView(showingSheet: self.$showingSheet, frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 260))
-                                    .environmentObject(self.animation)
-                                    .frame(width: (geometry.size.width/2)-30, height: 260)
-                                    .transition(.asymmetric(insertion: .opacity, removal: .opacity))
-                                    .animation(.default)
+                                RegulationView(showingSheet: self.$showingSheet)
+                                .transition(.asymmetric(insertion: .opacity, removal: .opacity))
+                                .animation(.default)
+                                .frame(width: (geometry.size.width/2)-30, height: 280)
+
                              }
                         }
                     }
@@ -54,7 +55,7 @@ struct DashboardUIView: View {
                         
                         ZStack{
                             // Infected Line Graph
-                            BarGraphView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 150), data: self.animation.normalizedDataInfected, text: "Infected: " , emoji: "🤢",  numberOfEmojis: self.animation.infectedEmojis)
+                            BarGraphView(frame: CGRect(x: 0, y: 0, width: (geometry.size.width/2)-30, height: 150), data: self.animation.normalizedDataInfected, text: "Infected: " , emoji: "🤢",  numberOfEmojis: self.animation.infectedEmojis, maximum: self.animation.maximumInfected)
                                 .frame(width: (geometry.size.width/2)-30, height: 150)
                         }
                         

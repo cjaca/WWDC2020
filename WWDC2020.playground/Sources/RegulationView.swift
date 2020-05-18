@@ -2,6 +2,10 @@ import SwiftUI
 
 struct RegulationView: View {
     
+//    @EnvironmentObject var animation: AnimationViewController
+    
+    @Binding var showingSheet: Bool
+    
     @State private var noRegulationsToggle = true
     @State private var moderateRegulationsToggle = false
     @State private var strongRegulationsToggle = false
@@ -22,6 +26,12 @@ struct RegulationView: View {
         strongRegulationsToggle = false
         veryStrongRegulationsToggle = false
         strongestRegulationsToggle = false
+//
+//        self.animation.noRegulations = true
+//        self.animation.moderateRegulations = false
+//        self.animation.strongRegulations = false
+//        self.animation.veryStrongRegulations = false
+//        self.animation.strongestRegulations = false
     }
     
     func moderateRegulations(){
@@ -30,6 +40,14 @@ struct RegulationView: View {
         strongRegulationsToggle = false
         veryStrongRegulationsToggle = false
         strongestRegulationsToggle = false
+        
+//        self.animation.noRegulations = true
+//        self.animation.moderateRegulations = true
+//        self.animation.strongRegulations = false
+//        self.animation.veryStrongRegulations = false
+//        self.animation.strongestRegulations = false
+//
+//        self.animation.restartViewIsVisible = true
     }
     
     func strongRegulations(){
@@ -38,6 +56,12 @@ struct RegulationView: View {
         strongRegulationsToggle = true
         strongestRegulationsToggle = false
         veryStrongRegulationsToggle = false
+        
+//        self.animation.noRegulations = true
+//        self.animation.moderateRegulations = true
+//        self.animation.strongRegulations = true
+//        self.animation.veryStrongRegulations = false
+//        self.animation.strongestRegulations = false
     }
     
     func strongestRegulations(){
@@ -46,6 +70,12 @@ struct RegulationView: View {
         strongRegulationsToggle = false
         strongestRegulationsToggle = true
         veryStrongRegulationsToggle = false
+        
+//        self.animation.noRegulations = true
+//        self.animation.moderateRegulations = true
+//        self.animation.strongRegulations = true
+//        self.animation.veryStrongRegulations = true
+//        self.animation.strongestRegulations = false
     }
     
     func veryStrongRegulations(){
@@ -54,6 +84,16 @@ struct RegulationView: View {
         strongRegulationsToggle = false
         strongestRegulationsToggle = false
         veryStrongRegulationsToggle = true
+        
+//        self.animation.noRegulations = true
+//        self.animation.moderateRegulations = true
+//        self.animation.strongRegulations = true
+//        self.animation.veryStrongRegulations = true
+//        self.animation.strongestRegulations = true
+    }
+    
+    init(showingSheet: Binding<Bool>) {
+        self._showingSheet = showingSheet
     }
     
     var body: some View {
@@ -61,6 +101,19 @@ struct RegulationView: View {
                 RoundedRectangle(cornerRadius: 5.0)
                     .foregroundColor(StyleSheet.backgroundColor)
                 VStack{
+                    HStack{
+                        Spacer()
+                            Button(action: {
+                                self.showingSheet.toggle()
+                            }){
+                                Image(systemName: "xmark.circle")
+                                    .font(.system(.body))
+                                    .foregroundColor(StyleSheet.secondaryTextColor)
+                                    .padding(.horizontal, CGFloat(10))
+                            }
+                        }.padding(10)
+                    Spacer()
+                    }
                         VStack{
                             DescriptionView(label: regulations[0].name, description: regulations[0].description, color: regulations[0].color, isSelected: Binding(
                                 get: { self.noRegulationsToggle },
@@ -120,7 +173,7 @@ struct RegulationView: View {
                 }
             }
     }
-}
+
 
 struct DescriptionView: View {
     let label: String
@@ -172,8 +225,8 @@ struct Regulation {
 }
 
 
-struct RegulationView_Previews: PreviewProvider {
-    static var previews: some View {
-        RegulationView()
-    }
-}
+//struct RegulationView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        RegulationView()
+//    }
+//}
