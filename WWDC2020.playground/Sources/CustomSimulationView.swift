@@ -31,18 +31,29 @@ struct CustomSimulationView: View {
                 VStack(alignment: .center){
 
                     HStack{
+                        Button(action: {
+                            self.animation.restartViewIsVisible = true
+                            self.animation.gameIsPaused = true
+                        }){
+                            Image(systemName: "arrow.counterclockwise.circle")
+                                .font(.system(.body))
+                                .foregroundColor(StyleSheet.secondaryTextColor)
+                                .padding(.horizontal, CGFloat(10))
+                        }
                         Spacer()
                         Text("Custom simulation")
                             .font(.system(.body))
-                            .foregroundColor(StyleSheet.textColor)
+                            .foregroundColor(StyleSheet.secondaryTextColor)
                         Spacer()
                         Button(action: {
                             self.showingSheet.toggle()
                         }){
-                            Image(systemName: "xmark.circle.fill")
+                            Image(systemName: "xmark.circle")
+                                .font(.system(.body))
+                                .foregroundColor(StyleSheet.secondaryTextColor)
                                 .padding(.horizontal, CGFloat(10))
                         }
-                    }
+                    }.padding(10)
                     
                     HStack{
                         textView(text: "Population:", width: width04)
@@ -69,7 +80,9 @@ struct CustomSimulationView: View {
                         })
                                 .colorScheme(.dark)
                                 .frame(width: width04, height: CGFloat(20), alignment: .trailing)
-                    }.padding()
+                    }.padding(8)
+                    
+                    Divider().background(Color(.white))
                     
                     HStack{
                         textView(text: "Initial infected:", width: width04)
@@ -91,7 +104,10 @@ struct CustomSimulationView: View {
                         })
                             .colorScheme(.dark)
                             .frame(width: width04, height: CGFloat(20), alignment: .trailing)
-                    }.padding()
+                    }.padding(8)
+                    
+                    Divider().background(Color(.white))
+
                     
                     HStack(alignment: .center){
                         textView(text: "Infectivity:", width: width04)
@@ -112,17 +128,32 @@ struct CustomSimulationView: View {
                         })
                             .colorScheme(.dark)
                             .frame(width: width04, height: CGFloat(20), alignment: .trailing)
-                    }.padding()
+                    }.padding(8)
+                    
+                    Divider().background(Color(.white))
+
                     
                     HStack(alignment: .center){
                         textView(text: "Death rate:", width: width04)
                         Spacer()
-                        subTextView(text: "\(self.deathRate)", width: width02)
+                        subTextView(text: "\(self.animation.deathRate) %", width: width02)
                         Spacer()
-                        Stepper("", value: $deathRate, in: 0...100, step: 1)
+                        Stepper("", onIncrement: {
+                            if self.animation.deathRate < 100 {self.animation.deathRate += 1}
+                            else {
+                                self.animation.deathRate=100
+                            }
+                        }, onDecrement: {
+                            if self.animation.deathRate > 0 {self.animation.deathRate -= 1}
+                            else {
+                                self.animation.deathRate = 0
+                            }
+                        })
                             .colorScheme(.dark)
                             .frame(width: width04, height: CGFloat(20), alignment: .trailing)
-                    }.padding()
+                    }.padding(8)
+                    
+
                 }
             }
     }

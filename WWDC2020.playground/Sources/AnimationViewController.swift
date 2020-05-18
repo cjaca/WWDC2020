@@ -36,8 +36,10 @@ public class AnimationViewController: SKScene, SKPhysicsContactDelegate, Observa
     // Dead
     @Published var rawDataDead : [CGFloat] = []
     @Published var normalizedDataDead : [CGFloat] = []
-    //
+    // table for timers
     var timerTable : [Timer] = []
+    // restart window toggle
+    @Published var restartViewIsVisible = false
 
     
     @Published var sir: [Sums] = []
@@ -301,7 +303,7 @@ extension AnimationViewController {
             timerTable.removeAll()
         }else{
             for node in sprites {
-                var time = node.userData?.value(forKey: "keyIncubationTimeLeft") as! Int
+                let time = node.userData?.value(forKey: "keyIncubationTimeLeft") as! Int
                 if (time > -1 && node.physicsBody?.categoryBitMask == PhysicsCategory.Inf){
                     healOrDie(node: node)
                 }
@@ -310,7 +312,6 @@ extension AnimationViewController {
     }
 
     func startInfection() {
-        let max = CGFloat(kPopulationSize-1)
         let i = sprites.count-1
         // start infection
         for n in 1...initialInfected {
@@ -377,10 +378,23 @@ extension AnimationViewController {
     func deleteSprite(){
         // Pick random sprite
         let max = sprites.count-1
-        let s = sprites[max]
         sprites[max].removeFromParent()
         sprites.remove(at: max)
         kPopulationSize-=1
+    }
+    
+    func restart(){
+        
+        gameIsPaused = true
+        for sprite in sprites {
+            sprite.removeFromParent()
+        }
+        sprites.removeAll()
+        
+        initSprites()
+        popSummary()
+        startInfection()
+        gameIsPaused = false
     }
 }
 
